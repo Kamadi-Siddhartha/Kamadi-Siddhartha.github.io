@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kamadi Siddhartha - VLSI Aspirant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: radial-gradient(ellipse at center, #001122 0%, #000511 100%);
+            color: #fff;
+            overflow-x: hidden;
+            cursor: none;
+        }
+        
+        /* Custom Cursor */
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #0080ff, #00ffff);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            mix-blend-mode: screen;
+            transition: transform 0.1s;
+            box-shadow: 0 0 20px #0080ff;
+        }
+        
+        /* Three.js Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border: 2px solid #0080ff;
+            border-radius: 50%;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .nav-dot:before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            background: #0080ff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s;
+        }
+        
+        .nav-dot.active:before,
+        .nav-dot:hover:before {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .nav-dot:hover {
+            box-shadow: 0 0 20px #0080ff;
+        }
+        
+        /* Page Sections */
+        .page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 50px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .page.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+            z-index: 2;
+        }
+        
+        .page-content {
+            max-width: 1200px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Typography */
+        .main-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(3rem, 8vw, 8rem);
+            font-weight: 900;
+            background: linear-gradient(45deg, #0080ff, #00ffff, #4dd0e1, #0080ff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 3s ease-in-out infinite;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 50px rgba(0, 128, 255, 0.8);
+        }
+        
+        .subtitle {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.2rem, 4vw, 2.5rem);
+            color: #0080ff;
+            text-align: center;
+            margin-bottom: 50px;
+            text-shadow: 0 0 30px #0080ff;
+        }
+        
+        .section-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 5vw, 4rem);
+            color: #00ffff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px #00ffff;
+        }
+        
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, rgba(0, 128, 255, 0.15), rgba(0, 255, 255, 0.1));
+            border: 1px solid rgba(0, 128, 255, 0.4);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: perspective(1000px) rotateX(-5deg) rotateY(5deg) translateY(-10px);
+            border-color: #0080ff;
+            box-shadow: 0 20px 40px rgba(0, 128, 255, 0.4);
+        }
+        
+        .card:before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(0, 128, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: cardShine 3s linear infinite;
+        }
+        
+        .card h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            color: #0080ff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #0080ff;
+        }
+        
+        .card p, .card li {
+            color: #cce7ff;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .card ul {
+            list-style: none;
+        }
+        
+        .card li:before {
+            content: '▶';
+            color: #00ffff;
+            margin-right: 10px;
+        }
+        
+        /* 3D Computing Chip Icons */
+        .icon-3d {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotate3D 8s linear infinite;
+        }
+        
+        .icon-face {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #0080ff, #00ffff);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: #000;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0, 128, 255, 0.6);
+            border: 2px solid #003366;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .icon-face:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(90deg, transparent 0%, #003366 10%, transparent 20%),
+                linear-gradient(0deg, transparent 0%, #003366 10%, transparent 20%);
+            background-size: 10px 100%, 100% 10px;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        .icon-face:after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #00ffff;
+            border-radius: 50%;
+            top: 8px;
+            left: 8px;
+            box-shadow: 
+                60px 0 0 #00ffff,
+                0 60px 0 #00ffff,
+                60px 60px 0 #00ffff,
+                30px 30px 0 #0080ff;
+        }
+        
+        .icon-face.front { transform: translateZ(8px); }
+        .icon-face.back { transform: translateZ(-8px) rotateY(180deg); }
+        .icon-face.right { transform: rotateY(90deg) translateZ(8px); }
+        .icon-face.left { transform: rotateY(-90deg) translateZ(8px); }
+        .icon-face.top { transform: rotateX(90deg) translateZ(8px); }
+        .icon-face.bottom { transform: rotateX(-90deg) translateZ(8px); }
+        
+        /* Contact Form */
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(0, 128, 255, 0.1);
+            border: 1px solid rgba(0, 128, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-family: 'Rajdhani', sans-serif;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #0080ff;
+            box-shadow: 0 0 20px rgba(0, 128, 255, 0.3);
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #0080ff, #00ffff);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            color: #000;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 128, 255, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 128, 255, 0.5);
+        }
+        
+        /* Animations */
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        @keyframes cardShine {
+            0% { transform: translateX(-200%) translateY(-200%) rotate(45deg); }
+            100% { transform: translateX(200%) translateY(200%) rotate(45deg); }
+        }
+        
+        @keyframes rotate3D {
+            0% { transform: rotateX(0deg) rotateY(0deg); }
+            25% { transform: rotateX(90deg) rotateY(90deg); }
+            50% { transform: rotateX(180deg) rotateY(180deg); }
+            75% { transform: rotateX(270deg) rotateY(270deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg); }
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            margin: 50px 0;
+        }
+        
+        .timeline:before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #0080ff, #00ffff);
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #0080ff;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin: 50px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .timeline-item:nth-child(odd) {
+            flex-direction: row-reverse;
+        }
+        
+        .timeline-content {
+            flex: 1;
+            max-width: 45%;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(0, 128, 255, 0.15), rgba(0, 255, 255, 0.1));
+            border-radius: 15px;
+            border: 1px solid rgba(0, 128, 255, 0.4);
+            margin: 0 50px;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            background: #0080ff;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px #0080ff;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.2); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page {
+                padding: 40px 20px;
+            }
+            
+            .timeline:before {
+                left: 30px;
+            }
+            
+            .timeline-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding-left: 60px;
+            }
+            
+            .timeline-content {
+                max-width: 100%;
+                margin: 0;
+            }
+            
+            .timeline-dot {
+                left: 30px;
+            }
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #001122 0%, #000511 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s;
+        }
+        
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loader {
+            width: 100px;
+            height: 100px;
+            border: 3px solid rgba(0, 128, 255, 0.3);
+            border-top: 3px solid #0080ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        .loading-text {
+            font-family: 'Orbitron', monospace;
+            color: #0080ff;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px #0080ff;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Simple particle effect */
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .bg-particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #0080ff;
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+            opacity: 0.6;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-10vh) translateX(50px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loading">
+        <div class="loader"></div>
+        <div class="loading-text">INITIALIZING PORTFOLIO...</div>
+    </div>
+    
+    <div class="cursor" id="cursor"></div>
+    
+    <div class="bg-particles" id="bgParticles"></div>
+    
+    <nav class="nav" id="nav">
+        <div class="nav-dot active" data-page="0"></div>
+        <div class="nav-dot" data-page="1"></div>
+        <div class="nav-dot" data-page="2"></div>
+        <div class="nav-dot" data-page="3"></div>
+        <div class="nav-dot" data-page="4"></div>
+        <div class="nav-dot" data-page="5"></div>
+        <div class="nav-dot" data-page="6"></div>
+    </nav>
+    
+    <!-- Page 1: Hero -->
+    <section class="page active" id="page-0">
+        <div class="page-content">
+            <h1 class="main-title">KAMADI SIDDHARTHA</h1>
+            <h2 class="subtitle">VLSI ASPIRANT & ELECTRONICS ENGINEER</h2>
+            <div style="text-align: center; margin-top: 50px;">
+                <div class="icon-3d">
+                    <div class="icon-face front">⚡</div>
+                    <div class="icon-face back">🔧</div>
+                    <div class="icon-face right">💻</div>
+                    <div class="icon-face left">🚀</div>
+                    <div class="icon-face top">⭐</div>
+                    <div class="icon-face bottom">🎯</div>
+                </div>
+                <p style="font-size: 1.4rem; color: #cce7ff; max-width: 600px; margin: 30px auto; line-height: 1.6;">
+                    Designing the future of semiconductor technology through innovative VLSI solutions and cutting-edge electronics engineering.
+                </p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Page 2: About -->
+    <section class="page" id="page-1">
+        <div class="page-content">
+            <h2 class="section-title">ABOUT ME</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">🎓</div>
+                        <div class="icon-face back">📚</div>
+                        <div class="icon-face right">🏛️</div>
+                        <div class="icon-face left">📖</div>
+                        <div class="icon-face top">✨</div>
+                        <div class="icon-face bottom">🎯</div>
+                    </div>
+                    <h3>Education</h3>
+                    <p><strong>B.Tech in Electronics and Communication Engineering</strong></p>
+                    <p>Indian Institute of Information Technology, Manipur</p>
+                    <p>Nov 2022 - Present | CGPA: 6.8/10</p>
+                </div>
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">🎯</div>
+                        <div class="icon-face back">💡</div>
+                        <div class="icon-face right">🚀</div>
+                        <div class="icon-face left">⚡</div>
+                        <div class="icon-face top">🔬</div>
+                        <div class="icon-face bottom">🌟</div>
+                    </div>
+                    <h3>Vision</h3>
+                    <p>Passionate about VLSI design and semiconductor technology. Focused on creating innovative solutions in chip design, processor architecture, and embedded systems.</p>
+                </div>
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">📞</div>
+                        <div class="icon-face back">📧</div>
+                        <div class="icon-face right">🔗</div>
+                        <div class="icon-face left">💼</div>
+                        <div class="icon-face top">🌐</div>
+                        <div class="icon-face bottom">📱</div>
+                    </div>
+                    <h3>Contact</h3>
+                    <p>📞 +91 6302981660</p>
+                    <p>📧 siddhukamde@iiitmanipur.ac.in</p>
+                    <p>🔗 LinkedIn | GitHub | Portfolio</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Page 3: Experience -->
+    <section class="page" id="page-2">
+        <div class="page-content">
+            <h2 class="section-title">EXPERIENCE</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="icon-3d">
+                            <div class="icon-face front">🏢</div>
+                            <div class="icon-face back">💼</div>
+                            <div class="icon-face right">⚡</div>
+                            <div class="icon-face left">🔧</div>
+                            <div class="icon-face top">🚀</div>
+                            <div class="icon-face bottom">🎯</div>
+                        </div>
+                        <h3>Intern at KT Semicon</h3>
+                        <p><strong>May 2024 – July 2024</strong></p>
+                        <ul>
+                            <li>Learned Verilog HDL design using Xilinx Vivado</li>
+                            <li>Implemented and tested a 32-bit RISC-V Processor on FPGA</li>
+                            <li>Gained hands-on experience in semiconductor design tools</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Page 4: Projects -->
+    <section class="page" id="page-3">
+        <div class="page-content">
+            <h2 class="section-title">PROJECTS</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">🧠</div>
+                        <div class="icon-face back">💾</div>
+                        <div class="icon-face right">⚡</div>
+                        <div class="icon-face left">🔧</div>
+                        <div class="icon-face top">🎯</div>
+                        <div class="icon-face bottom">⭐</div>
+                    </div>
+                    <h3>1Kb SRAM Design</h3>
+                    <ul>
+                        <li>8T cell architecture</li>
+                        <li>45nm technology node</li>
+                        <li>Complete peripheral circuitry</li>
+                        <li>Simulation waveforms generated</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">⚙️</div>
+                        <div class="icon-face back">🖥️</div>
+                        <div class="icon-face right">🔄</div>
+                        <div class="icon-face left">📊</div>
+                        <div class="icon-face top">🚀</div>
+                        <div class="icon-face bottom">💡</div>
+                    </div>
+                    <h3>32-bit RISC-V Processor</h3>
+                    <ul>
+                        <li>5-Stage Pipelined Architecture</li>
+                        <li>Designed in Cadence Software</li>
+                        <li>Complete Layout & Schematic</li>
+                        <li>Ready for tapeout</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">🔧</div>
+                        <div class="icon-face back">⚡</div>
+                        <div class="icon-face right">🔄</div>
+                        <div class="icon-face left">🎯</div>
+                        <div class="icon-face top">💻</div>
+                        <div class="icon-face bottom">🌟</div>
+                    </div>
+                    <h3>Digital Circuit Designs</h3>
+                    <ul>
+                        <li>FIFO, UART, Arbiter</li>
+                        <li>Booth Multiplier, Clock Divider</li>
+                        <li>32-bit ALU, 8X8 Signed Multiplier</li>
+                        <li>Vedic Multiplier</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">📡</div>
+                        <div class="icon-face back">🎛️</div>
+                        <div class="icon-face right">🌊</div>
+                        <div class="icon-face left">⚡</div>
+                        <div class="icon-face top">🔧</div>
+                        <div class="icon-face bottom">💎</div>
+                    </div>
+                    <h3>Analog Circuit Design</h3>
+                    <ul>
+                        <li>LM741 Op-Amp Design</li>
+                        <li>Step Ring VCO Implementation</li>
+                        <li>Complete analog characterization</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Page 5: Skills -->
+    <section class="page" id="page-4">
+        <div class="page-content">
+            <h2 class="section-title">SKILLS</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">💻</div>
+                        <div class="icon-face back">🔧</div>
+                        <div class="icon-face right">⚡</div>
+                        <div class="icon-face left">🎯</div>
+                        <div class="icon-face top">🚀</div>
+                        <div class="icon-face bottom">💡</div>
+                    </div>
+                    <h3>Programming Languages</h3>
+                    <ul>
+                        <li>Verilog HDL</li>
+                        <li>C Programming</li>
+                        <li>Python</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">🛠️</div>
+                        <div class="icon-face back">⚙️</div>
+                        <div class="icon-face right">🔬</div>
+                        <div class="icon-face left">📊</div>
+                        <div class="icon-face top">🎯</div>
+                        <div class="icon-face bottom">⭐</div>
+                    </div>
+                    <h3>Software & Tools</h3>
+                    <ul>
+                        <li>Cadence (Virtuoso, Spectre, Assura)</li>
+                        <li>Xilinx Vivado</li>
+                        <li>Genus, Innovus, SimVision</li>
+                        <li>Microchip Studio, Ansys</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">🎤</div>
+                        <div class="icon-face back">👥</div>
+                        <div class="icon-face right">💡</div>
+                        <div class="icon-face left">🎯</div>
+                        <div class="icon-face top">✨</div>
+                        <div class="icon-face bottom">🌟</div>
+                    </div>
+                    <h3>Soft Skills</h3>
+                    <ul>
+                        <li>Project Presentations</li>
+                        <li>Public Speaking</li>
+                        <li>Team Collaboration</li>
+                        <li>Technical Documentation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Page 6: Achievements -->
+    <section class="page" id="page-5">
+        <div class="page-content">
+            <h2 class="section-title">ACHIEVEMENTS</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">🏆</div>
+                        <div class="icon-face back">📜</div>
+                        <div class="icon-face right">🎓</div>
+                        <div class="icon-face left">⭐</div>
+                        <div class="icon-face top">🌟</div>
+                        <div class="icon-face bottom">💎</div>
+                    </div>
+                    <h3>SWAYAM-NPTEL Certifications</h3>
+                    <ul>
+                        <li>Joy of Computing - 82% score</li>
+                        <li>Deep Learning - 58% score</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="icon-3d">
+                        <div class="icon-face front">🔧</div>
+                        <div class="icon-face back">⚡</div>
+                        <div class="icon-face right">🎯</div>
+                        <div class="icon-face left">💻</div>
+                        <div class="icon-face top">🌐</div>
+                        <div class="icon-face bottom">🚀</div>
+                    </div>
+                    <h3>Technical Certifications</h3>
+                    <ul>
+                        <li>Arduino Programming - 65%</li>
+                        <li>Scilab Programming - 48.89%</li>
+                        <li>PERL Programming - 53.33%</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Page 7: Contact -->
+    <section class="page" id="page-6">
+        <div class="page-content">
+            <h2 class="section-title">CONTACT ME</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start; margin-top: 50px;">
+                <div>
+                    <div class="icon-3d" style="margin: 0 0 30px 0;">
+                        <div class="icon-face front">📱</div>
+                        <div class="icon-face back">💌</div>
+                        <div class="icon-face right">🌐</div>
+                        <div class="icon-face left">🔗</div>
+                        <div class="icon-face top">📡</div>
+                        <div class="icon-face bottom">⚡</div>
+                    </div>
+                    <div class="card">
+                        <h3>Get In Touch</h3>
+                        <p style="margin-bottom: 20px;">Ready to collaborate on cutting-edge VLSI projects or discuss opportunities in semiconductor design.</p>
+                        <div style="space-y: 15px;">
+                            <p><strong>📞 Phone:</strong> +91 6302981660</p>
+                            <p><strong>📧 Email:</strong> siddhukamde@iiitmanipur.ac.in</p>
+                            <p><strong>🏛️ Institution:</strong> IIIT Manipur</p>
+                            <p><strong>🔗 Connect:</strong> LinkedIn | GitHub | Portfolio</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" class="form-control" placeholder="Your Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Subject" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea class="form-control" rows="5" placeholder="Your Message" required style="resize: vertical; min-height: 120px;"></textarea>
+                    </div>
+                    <button type="submit" class="btn">
+                        <span style="position: relative; z-index: 1;">SEND MESSAGE</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Loading screen
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+            }, 2000);
+        });
+
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        let cursorTrails = [];
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            
+            // Create cursor trail
+            const trail = document.createElement('div');
+            trail.className = 'cursor-trail';
+            trail.style.left = e.clientX + 'px';
+            trail.style.top = e.clientY + 'px';
+            document.body.appendChild(trail);
+            
+            setTimeout(() => {
+                trail.remove();
+            }, 500);
+        });
+
+        // Generate background particles
+        function createBackgroundParticles() {
+            const container = document.getElementById('bgParticles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'bg-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Navigation functionality
+        const navDots = document.querySelectorAll('.nav-dot');
+        const pages = document.querySelectorAll('.page');
+        let currentPage = 0;
+        let isAnimating = false;
+
+        function showPage(pageIndex) {
+            if (isAnimating || pageIndex === currentPage) return;
+            
+            isAnimating = true;
+            
+            // Hide current page
+            pages[currentPage].classList.remove('active');
+            navDots[currentPage].classList.remove('active');
+            
+            // Show new page with longer delay for better visibility
+            setTimeout(() => {
+                pages[pageIndex].classList.add('active');
+                navDots[pageIndex].classList.add('active');
+                currentPage = pageIndex;
+                
+                // Increased animation duration for better UX
+                setTimeout(() => {
+                    isAnimating = false;
+                }, 1200);
+            }, 200);
+        }
+
+        // Navigation click events
+        navDots.forEach((dot, index) => {
+            dot.addEventListener('click', () => showPage(index));
+        });
+
+        // Keyboard navigation with cooldown
+        let isKeyCooldown = false;
+        
+        document.addEventListener('keydown', (e) => {
+            if (isAnimating || isKeyCooldown) return;
+            
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                isKeyCooldown = true;
+                const nextPage = (currentPage + 1) % pages.length;
+                showPage(nextPage);
+                setTimeout(() => { isKeyCooldown = false; }, 1500);
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                isKeyCooldown = true;
+                const prevPage = (currentPage - 1 + pages.length) % pages.length;
+                showPage(prevPage);
+                setTimeout(() => { isKeyCooldown = false; }, 1500);
+            }
+        });
+
+        // Smooth scroll wheel navigation with debounce
+        let wheelTimeout;
+        let isWheelCooldown = false;
+        
+        document.addEventListener('wheel', (e) => {
+            if (isAnimating || isWheelCooldown) return;
+            
+            e.preventDefault();
+            isWheelCooldown = true;
+            
+            clearTimeout(wheelTimeout);
+            wheelTimeout = setTimeout(() => {
+                if (e.deltaY > 0) {
+                    // Scroll down
+                    const nextPage = (currentPage + 1) % pages.length;
+                    showPage(nextPage);
+                } else {
+                    // Scroll up
+                    const prevPage = (currentPage - 1 + pages.length) % pages.length;
+                    showPage(prevPage);
+                }
+                
+                // Reset cooldown after longer period
+                setTimeout(() => {
+                    isWheelCooldown = false;
+                }, 1500);
+            }, 100);
+        });
+
+        // Card hover effects
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'perspective(1000px) rotateX(-5deg) rotateY(5deg) translateY(-10px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+            });
+        });
+
+        // Form submission
+        const contactForm = document.querySelector('.contact-form');
+        const submitBtn = contactForm.querySelector('.btn');
+        
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const inputs = contactForm.querySelectorAll('.form-control');
+            const formData = {};
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                if (input.value.trim() === '') {
+                    isValid = false;
+                    input.style.borderColor = '#ff4444';
+                } else {
+                    input.style.borderColor = 'rgba(0, 128, 255, 0.3)';
+                    formData[input.placeholder.toLowerCase().replace(' ', '_')] = input.value;
+                }
+            });
+            
+            if (isValid) {
+                // Simulate form submission
+                this.innerHTML = '<span style="position: relative; z-index: 1;">SENDING...</span>';
+                this.style.background = 'linear-gradient(45deg, #00ff00, #00cc00)';
+                
+                setTimeout(() => {
+                    this.innerHTML = '<span style="position: relative; z-index: 1;">MESSAGE SENT!</span>';
+                    
+                    setTimeout(() => {
+                        this.innerHTML = '<span style="position: relative; z-index: 1;">SEND MESSAGE</span>';
+                        this.style.background = 'linear-gradient(45deg, #0080ff, #00ffff)';
+                        inputs.forEach(input => input.value = '');
+                    }, 2000);
+                }, 1500);
+            }
+        });
+
+        // Enhanced 3D icon animations
+        document.querySelectorAll('.icon-3d').forEach(icon => {
+            icon.addEventListener('mouseenter', function() {
+                this.style.animationPlayState = 'paused';
+                this.style.transform = 'scale(1.1) rotateX(15deg) rotateY(15deg)';
+            });
+            
+            icon.addEventListener('mouseleave', function() {
+                this.style.animationPlayState = 'running';
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        // Responsive navigation for mobile
+        if (window.innerWidth <= 768) {
+            const nav = document.querySelector('.nav');
+            nav.style.flexDirection = 'row';
+            nav.style.top = 'auto';
+            nav.style.bottom = '30px';
+            nav.style.right = '50%';
+            nav.style.transform = 'translateX(50%)';
+        }
+
+        // Initialize background particles
+        createBackgroundParticles();
+
+        // Performance optimization
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.card, .icon-3d').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Add touch support for mobile with cooldown
+        let touchStartY = 0;
+        let touchEndY = 0;
+        let isTouchCooldown = false;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartY = e.changedTouches[0].screenY;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (isAnimating || isTouchCooldown) return;
+            
+            touchEndY = e.changedTouches[0].screenY;
+            const diff = touchStartY - touchEndY;
+            
+            if (Math.abs(diff) > 50) {
+                isTouchCooldown = true;
+                if (diff > 0) {
+                    // Swipe up
+                    const nextPage = (currentPage + 1) % pages.length;
+                    showPage(nextPage);
+                } else {
+                    // Swipe down
+                    const prevPage = (currentPage - 1 + pages.length) % pages.length;
+                    showPage(prevPage);
+                }
+                setTimeout(() => { isTouchCooldown = false; }, 1500);
+            }
+        });
+
+        console.log('🚀 Kamadi Siddhartha Portfolio Loaded Successfully!');
+        console.log('💫 Navigate using: Arrow keys, Mouse wheel, Touch gestures, or Navigation dots');
+        console.log('⚡ Optimized for performance with blue neon theme');
+    </script>
+</body>
+</html>
